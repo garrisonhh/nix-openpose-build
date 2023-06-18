@@ -1,86 +1,82 @@
 {
   inputs = {
-    nixpkgs.url = github:NixOs/nixpkgs/nixos-23.05;
+    nixpkgs.url = github:NixOs/nixpkgs/nixos-22.11;
     atlas.url = github:garrisonhh/nix-atlas-build;
+    caffe.url = github:garrisonhh/nix-caffe-build;
   };
 
-  outputs = { self, nixpkgs, atlas }:
+  outputs = { self, nixpkgs, atlas, caffe }:
     let
       # project config
+      name = "openpose";
       system = "x86_64-linux";
 
       inherit (pkgs) mkShell;
       inherit (pkgs.stdenv) mkDerivation;
       pkgs = nixpkgs.legacyPackages.${system};
+      pyPkgs = pkgs.python27Packages;
       atlasPkgs = atlas.packages.${system};
-
-      # package management
-      openposePkgs = cripple: with pkgs; [
-        git
-        glog
-        protobuf
-        caffe
-        cudaPackages.cudatoolkit
-        cudaPackages.cudnn_8_5_0
-        cmake
-        opencv
-        boost
-        hdf5-cpp
-        (if (cripple) then atlasPkgs.crippled else atlasPkgs.release)
-
-        # TODO REMOVE
-        unixtools.whereis
-      ];
-
-      devPkgs = with pkgs.python311Packages; [
-        python
-        numpy
-        opencv4
-      ];
-
-      # shell
-      devShell = mkShell {
-        packages = (openposePkgs true) ++ devPkgs;
-      };
+      caffePkgs = caffe.packages.${system};
 
       # openpose
-      mkOpenpose = cripple: mkDerivation {
-        name = "openpose";
-        src = builtins.fetchGit {
-          name = "openpose";
-          url = "https://github.com/CMU-Perceptual-Computing-Lab/openpose.git";
-          ref = "master";
-          submodules = true;
+      mkOpenpose = cripple:
+        let
+          toggleCrippled = p: if (cripple) then p.crippled else p.release;
+
+          caffe = toggleCrippled caffePkgs;
+          atlas = toggleCrippled atlasPkgs;
+
+          caffeDir = caffe.outPath;
+
+          buildInputs =
+            [ caffe atlas ] ++
+            (with pkgs; [
+              git
+              glog
+              protobuf3_8
+              cudaPackages.cudatoolkit
+              cudaPackages.cudnn_8_5_0
+              opencv
+              cmake
+              boost
+              hdf5-cpp
+            ]);
+        in mkDerivation {
+          inherit name buildInputs;
+          src = builtins.fetchGit {
+            inherit name;
+            url = "https://github.com/garrisonhh/openpose.git";
+            ref = "master";
+          };
+
+          configurePhase = ''
+            mkdir build/
+            cmake -Bbuild/ \
+                -DBUILD_CAFFE=OFF \
+                -DCaffe_INCLUDE_DIRS=${caffeDir}/include/caffe \
+                -DCaffe_LIBS=${caffeDir}/lib/libcaffe.so
+          '';
+
+          buildPhase = ''
+            cd build/
+            make -j`nproc` openpose
+            cd -
+          '';
+
+          installPhase = ''
+            >&2 ls
+
+            mkdir -p $out/
+            cp -r ./build/* $out/
+          '';
         };
-
-        patchPhase = ''
-          >&2 pwd
-          # this is a hack to prevent the cudnn version check from failing
-          sed -i 's/???/8.5.0/g' './cmake/Cuda.cmake'
-          echo '==============================================================='
-          cat './cmake/Cuda.cmake'
-          echo '==============================================================='
-        '';
-
-        buildInputs = openposePkgs cripple;
-        buildPhase = ''
-          BUILD="$out/build"
-
-          mkdir -p "$BUILD"
-          cmake -S .. -B "$BUILD"
-          cd "$BUILD"
-          make
-        '';
-      };
 
       packages = {
         default = mkOpenpose false;
         release = mkOpenpose false;
         crippled = mkOpenpose true;
       };
-    in
-      {
-        devShells.${system}.default = devShell;
-        packages.${system} = packages;
-      };
+    in {
+      packages.${system} = packages;
+    };
 }

@@ -18,6 +18,43 @@
         "type": "github"
       }
     },
+    "atlas_2": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_2"
+      },
+      "locked": {
+        "lastModified": 1686669554,
+        "narHash": "sha256-QeYNfHqUzuejQDIjv5VXATcd12MP+7yO/b9Q3u0HP8g=",
+        "owner": "garrisonhh",
+        "repo": "nix-atlas-build",
+        "rev": "da03a0f501e042ed556c91239f321d67bac82301",
+        "type": "github"
+      },
+      "original": {
+        "owner": "garrisonhh",
+        "repo": "nix-atlas-build",
+        "type": "github"
+      }
+    },
+    "caffe": {
+      "inputs": {
+        "atlas": "atlas_2",
+        "nixpkgs": "nixpkgs_3"
+      },
+      "locked": {
+        "lastModified": 1687028041,
+        "narHash": "sha256-ES5eNF/kOYC7eBoFRKTiInlENVPExzh2zhM9GpYfe/Q=",
+        "owner": "garrisonhh",
+        "repo": "nix-caffe-build",
+        "rev": "1304218d1b5756b5bb1a15b1be20ef56bcc160c2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "garrisonhh",
+        "repo": "nix-caffe-build",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1686513595,
@@ -50,10 +87,43 @@
         "type": "github"
       }
     },
+    "nixpkgs_3": {
+      "locked": {
+        "lastModified": 1686929285,
+        "narHash": "sha256-WGtVzn+vGMPTXDO0DMNKVFtf+zUSqeW+KKk4Y/Ae99I=",
+        "owner": "NixOs",
+        "repo": "nixpkgs",
+        "rev": "93fddcf640ceca0be331210ba3101cee9d91c13d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOs",
+        "ref": "nixos-22.11",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_4": {
+      "locked": {
+        "lastModified": 1687019075,
+        "narHash": "sha256-YjB+tp0DPfzct8XmXNW1UAfQp0irIVM7nGcJPiqT61c=",
+        "owner": "NixOs",
+        "repo": "nixpkgs",
+        "rev": "50d2e0780758fcb41cf5e494a51624cbf6c40b20",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOs",
+        "ref": "nixos-22.11",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "atlas": "atlas",
-        "nixpkgs": "nixpkgs_2"
+        "caffe": "caffe",
+        "nixpkgs": "nixpkgs_4"
       }
     }
   },
